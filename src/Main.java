@@ -1,7 +1,4 @@
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 
 public class Main {
     /**
@@ -14,9 +11,7 @@ public class Main {
         String filePath = args[0];
         FileInputStream fileInputStream = new FileInputStream(filePath);
 
-        // Todo: Load the .bmp slide puzzle
+        // todo: write comment here
         Bmp bmp = new Bmp(fileInputStream);
-        // Todo: Extract buffer image from BmpLoader
-
     }
 }

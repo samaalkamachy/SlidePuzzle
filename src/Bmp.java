@@ -7,6 +7,7 @@ import java.io.IOException;
 public class Bmp {
     private FileInputStream fileInputStream;
     private final int BM = 0x4d42;
+    private int position = 0;
 
     short signature;
     int fileSize;
@@ -24,6 +25,8 @@ public class Bmp {
     int yPixelPerMeter;
     int coloursInColourTable;
     int importantColours;
+
+    // todo:
     int redChanelBitMask;
     int greenChanelBitMask;
     int blueChanelBitMask;
@@ -41,19 +44,26 @@ public class Bmp {
     /**
      * Constructor for Bmp class
      *
-     * @param fileInputStream --> --> .bmp slide puzzle
+     * @param fileInputStream --> .bmp slide puzzle
+     * @throws Exception
      */
     public Bmp(FileInputStream fileInputStream) throws Exception {
         this.fileInputStream = fileInputStream;
         readFileHeader();
         readHeader();
+
+        // todo: find out why:
+        if (compression != 0){
+            throw new Exception("Functionality to load a file with a compression method is not yet supported.");
+        }
+
         // todo: read pallet
 
         // todo: pixel data
     }
 
     /**
-     * Assigning BMP file header reserved data to global variables.
+     * Reading and assigning BMP file header reserved data to global variables.
      */
     private void readFileHeader() throws Exception {
         signature = readShort();
@@ -67,7 +77,7 @@ public class Bmp {
     }
 
     /**
-     * Assigning BMP header reserved data to global variables.
+     * Reading and assigning BMP header reserved data to global variables.
      */
     private void readHeader() throws IOException {
         headersize = readInt();
@@ -86,8 +96,6 @@ public class Bmp {
         if (bitsPerPixels == 24){
             coloursInColourTable = importantColours = 0;
         }
-
-
     }
 
     /**
