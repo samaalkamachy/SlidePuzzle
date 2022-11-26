@@ -11,7 +11,7 @@ public class Main {
         String filePath = args[0];
         FileInputStream fileInputStream = new FileInputStream(filePath);
 
-        // todo: write comment here
-        Bmp bmp = new Bmp(fileInputStream);
+        // Create new instance of BMP object.
+        Bmp bmpImage = new Bmp(fileInputStream);
     }
 }
