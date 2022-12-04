@@ -1,3 +1,6 @@
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.FileInputStream;
 
 public class Main {
@@ -13,5 +16,13 @@ public class Main {
 
         // Create new instance of BMP object.
         Bmp bmpImage = new Bmp(fileInputStream);
+
+        BufferedImage image = ImageIO.read(new File(filePath));
+        for (int i = 0; i < image.getWidth(); i ++){
+            for (int j = 0; j < image.getHeight(); j++){
+                System.out.print(image.getRGB(i, j));
+            }
+            System.out.println();
+        }
     }
 }

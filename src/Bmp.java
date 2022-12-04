@@ -1,5 +1,6 @@
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.Math;
 
 /**
  * BMP helper class, allows for the decoding of raw .bmp file data.
@@ -8,7 +9,7 @@ import java.io.IOException;
  */
 public class Bmp {
     private FileInputStream fileInputStream;
-    private final int BM = 0x4d42;				// Windows 3.1x, 95, NT, .. etc. 
+    private final int BM = 0x4d42;				// Windows 3.1x, 95, NT, .. etc.
     private int position = 0;					// Cursor position in the file input stream.
 
     // BMP Info header global variables
@@ -32,6 +33,7 @@ public class Bmp {
     int importantColours;						// The number of important colours used; 0 when every colour is important. 
     
     String scan_type;
+    int noEntries;
  
     /**
      * Constructor for Bmp class
@@ -57,7 +59,7 @@ public class Bmp {
         if (signature != BM) {
             throw new Exception("File signature is not 'BM'"); 
         }
-        
+
         fileSize = readInt();
         reserved_1 = readShort();
         reserved_2 = readShort();
@@ -65,17 +67,45 @@ public class Bmp {
     }
 
     /**
-     * Reading and assigning BMP header reserved data to global variables.
+     * Reads the header size then calls the function responsible for reading the remaining header; depending on size.
+     *
+     * @throws Exception --> If header type is not supported by windows.
+     */
+    private void readHeader() throws Exception {
+        headersize = readInt();
+        if (headersize == 12) {
+            readBitmapCoreHeader();
+        } else if (headersize == 40) {
+            readBitmapInfoHeader();
+        } else if (headersize == 108) {
+            readBitmapV4Header();
+        } else if (headersize == 124) {
+            readBitmapV5Header();
+        } else {
+            throw new Exception("Application currently only supports windows header types.");
+        }
+    }
+
+    /**
+     * Reading and assigning BMP header (of type "BITMAPCOREHEADER") reserved data to global variables.
+     *
+     * @throws Exception --> todo
+     */
+    private void readBitmapCoreHeader() throws Exception {
+        // todo: Complete bitmap core header
+        width = readShort();
+        height = readShort();
+        planes = readShort(); // todo: wikipedia says this must be 1 you should probably make sure its actually 1.
+        bitsPerPixels = readShort();
+    }
+
+    /**
+     * Reading and assigning BMP header (of type "BITMAPINFOHEADER") reserved data to global variables.
      * 
      * @throws Exception --> If header is not off type BITMAPINFOHEADER. 
      * 					 --> If compresion is not off type BI_RGB. 
      */
-    private void readHeader() throws Exception {
-        headersize = readInt();
-        if (headersize != 40) {
-        	throw new Exception("BMP Header is an invalid type, application only accepts BITMAPINFOHEADER.");
-        }
-        
+    private void readBitmapInfoHeader() throws Exception {
         width = readInt();
         height = readInt();
         planes = readShort();
@@ -92,7 +122,12 @@ public class Bmp {
         
         xPixelsPerMeter = readInt();
         yPixelPerMeter = readInt();
-        coloursInColourTable = readInt();
+
+        coloursInColourTable = readInt(); // If the number of colours is 0 then default to 2^n where n is bits per pixel.
+        if (coloursInColourTable == 0) {
+            coloursInColourTable = (int) Math.pow(1, bitsPerPixels);
+        }
+
         importantColours = readInt();
         
         // Windows bitmaps can also specify an upper-left origin by using a negative value for the image height.
@@ -100,21 +135,53 @@ public class Bmp {
         	scan_type = "TOP_TO_BOTTOM";
         }
     }
-    
+
+    /**
+     * !!!!NOT YET IMPLEMENTED!!!! skeleton for V4 Header types
+     *
+     * @throws Exception
+     */
+    private void readBitmapV4Header() throws Exception {
+        // todo: Complete v4 header
+        throw new Exception("Bitmap with header type V4 is not yet implemented.");
+    }
+
+    /**
+     * !!!!NOT YET IMPLEMENTED!!!! skeleton for V5 Header types
+     *
+     * @throws Exception --> A meme
+     */
+    private void readBitmapV5Header() throws Exception {
+        // todo: Complete v5 header
+        throw new Exception("Dude.. give it a second I haven't implemented V5 header type yet.");
+    }
+
     /**
      * 
      */
-    private void readColourTable() {
-    	if (coloursInColourTable == 0) {
-    		//number of entries in the palette is 2n (where n is the number of bits per pixel)
-    	}
+    private void readColourTable() throws IOException {
+        // each entry (colours in colour table) in the color table occupies 4 bytes, in the order blue, green, red, 0x00
+        int rowSize = ((bitsPerPixels * width) / 32) * 4;
+        int pixelArraySize = rowSize * Math.abs(height);
+
+        byte[] blue = new byte[coloursInColourTable];
+        byte[] green = new byte[coloursInColourTable];
+        byte[] red = new byte[coloursInColourTable];
+
+        for (int i = 0; i < coloursInColourTable; i++){
+            blue[i] = (byte) fileInputStream.read();
+            green[i] = (byte) fileInputStream.read();
+            red[i] = (byte) fileInputStream.read();
+            fileInputStream.read(); // This is padding.
+            position = position + 4;
+        }
     }
 
     /**
      * 
      */
     private void readPixelArray() {
-    	
+
     }
     
     /**
@@ -125,8 +192,8 @@ public class Bmp {
         int byte_2 = fileInputStream.read();
         int byte_3 = fileInputStream.read();
         int byte_4 = fileInputStream.read();
-        position =+ 4;
-        return ((byte_4 << 24) + (byte_3 << 16) + (byte_2 << 8) + (byte_1 << 0));
+        position =  position + 4;
+        return ((byte_4 << 24) + (byte_3 << 16) + (byte_2 << 8) + byte_1);
     }
 
     /**
@@ -135,7 +202,7 @@ public class Bmp {
     private short readShort() throws IOException {
         int byte_1 = fileInputStream.read();
         int byte_2 = fileInputStream.read();
-        position =+2;
+        position = position + 2;
         return (short)((byte_2 << 8) + byte_1);
     }
 }
