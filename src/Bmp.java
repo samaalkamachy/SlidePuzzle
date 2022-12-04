@@ -164,17 +164,25 @@ public class Bmp {
         int rowSize = ((bitsPerPixels * width) / 32) * 4;
         int pixelArraySize = rowSize * Math.abs(height);
 
-        byte[] blue = new byte[coloursInColourTable];
-        byte[] green = new byte[coloursInColourTable];
-        byte[] red = new byte[coloursInColourTable];
-
-        for (int i = 0; i < coloursInColourTable; i++){
-            blue[i] = (byte) fileInputStream.read();
-            green[i] = (byte) fileInputStream.read();
-            red[i] = (byte) fileInputStream.read();
-            fileInputStream.read(); // This is padding.
-            position = position + 4;
+        int[][] image = new int[rowSize][];
+        int[] temp = new int[3];
+        for (int col = 0; col < width; col++) {
+    		temp[0] = fileInputStream.read();
+    		temp[1] = fileInputStream.read();
+    		temp[2] = fileInputStream.read();
+    		fileInputStream.read(); // Padding? 
+    		image[col] = temp;
         }
+        System.out.print(image);
+//        for (int col = 0; col < width; col++) {
+//        	for (int row = 0; row < height; row++) {
+//        		temp[0] = fileInputStream.read();
+//        		temp[1] = fileInputStream.read();
+//        		temp[2] = fileInputStream.read();
+//        		fileInputStream.read(); // Padding? 
+//        		image[row][col] = temp;
+//        	}
+//        }
     }
 
     /**
