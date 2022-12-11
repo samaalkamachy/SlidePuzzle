@@ -1,6 +1,8 @@
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.Math;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * BMP helper class, allows for the decoding of raw .bmp file data.
@@ -9,7 +11,7 @@ import java.lang.Math;
  */
 public class Bmp {
     private FileInputStream fileInputStream;
-    private final int BM = 0x4d42;				// Windows 3.1x, 95, NT, .. etc.
+    private final static int BM = 0x4d42;		// Windows 3.1x, 95, NT, .. etc.
     private int position = 0;					// Cursor position in the file input stream.
 
     // BMP Info header global variables
@@ -34,6 +36,7 @@ public class Bmp {
     
     String scan_type;
     int noEntries;
+    int[][][] image;
  
     /**
      * Constructor for Bmp class
@@ -46,7 +49,6 @@ public class Bmp {
         readFileHeader();
         readHeader();
         readColourTable();
-        readPixelArray();
     }
     
     /**
@@ -157,39 +159,32 @@ public class Bmp {
     }
 
     /**
+     * !! NOT TRUSTED !! todo: idk this feels very wrong, going to start testing it. 
+     * Its seems like weve extracted all of this data to just use the width and height?
+     * Also what about the padding, re-watch bmp youtube video and rethink the logic. 
      * 
+     * @throws Exception 
      */
-    private void readColourTable() throws IOException {
+    private void readColourTable() throws Exception {
         // each entry (colours in colour table) in the color table occupies 4 bytes, in the order blue, green, red, 0x00
         int rowSize = ((bitsPerPixels * width) / 32) * 4;
         int pixelArraySize = rowSize * Math.abs(height);
-
-        int[][] image = new int[rowSize][];
-        int[] temp = new int[3];
-        for (int col = 0; col < width; col++) {
-    		temp[0] = fileInputStream.read();
-    		temp[1] = fileInputStream.read();
-    		temp[2] = fileInputStream.read();
-    		fileInputStream.read(); // Padding? 
-    		image[col] = temp;
+        
+        image = new int[width][height][3];
+        
+        for (int i=0; i<width - 1; i++) {
+        	for (int j=0; j<height; j++) {
+        		image[i][j][2] = fileInputStream.read();	// Red.
+        		image[i][j][1] = fileInputStream.read();	// Green.
+        		image[i][j][0] = fileInputStream.read();	// Blue.
+        		
+        		if (image[i][j][0] < 0 || image[i][j][0] > 255 || 
+        				image[i][j][1] < 0 || image[i][j][1] > 255 ||
+        					image[i][j][2] < 0 || image[i][j][2] > 255) {
+        			throw new Exception("theres something wrong with the image data");
+        		}
+        	}
         }
-        System.out.print(image);
-//        for (int col = 0; col < width; col++) {
-//        	for (int row = 0; row < height; row++) {
-//        		temp[0] = fileInputStream.read();
-//        		temp[1] = fileInputStream.read();
-//        		temp[2] = fileInputStream.read();
-//        		fileInputStream.read(); // Padding? 
-//        		image[row][col] = temp;
-//        	}
-//        }
-    }
-
-    /**
-     * 
-     */
-    private void readPixelArray() {
-
     }
     
     /**
@@ -212,5 +207,32 @@ public class Bmp {
         int byte_2 = fileInputStream.read();
         position = position + 2;
         return (short)((byte_2 << 8) + byte_1);
+    }
+    
+    /**
+     * Given an RGB colour, find a list of all pixel index's that contain the colour within the image. 
+     * 
+     * @param rgb --> Int array contaings rgb in the range 0-255. 
+     * @return index_list --> A list containing all of the index's. 
+     */
+    public List<Integer[]> findList(int[] rgb){
+    	Integer[] index = new Integer[2];
+    	List<Integer[]> index_list = new ArrayList<Integer[]>();  
+    	
+		for (int i =0; i< width; i++) {
+			for (int j=0; j< height; j++){
+				
+				if (image[i][j][0] == rgb[0] && 
+						image[i][j][1] == rgb[1] &&
+							image[i][j][2] == rgb[2]) {
+					index[0] = i;
+					index[1] = j;
+					index_list.add(index);
+					System.out.print(index[0] + ", " + index[1]);
+					System.out.println();
+				}
+			}
+		}
+    	return index_list;
     }
 }
