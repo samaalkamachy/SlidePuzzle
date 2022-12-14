@@ -14,3 +14,6 @@ I think the correct steps to take from here is add unit testing.
 
 Sama's Update and note: 14/12 
 visually the colour table seems to be all correct now that i've implemented scan type and padding. I've jumped ahead and starting looking for the black pixels but i think i need to take a step back do proper testing and think before progressing with the image processing. There also seems to be so much data that i've colelcted from the bmp raw data that is straight up not used - what should i do with it? 
+
+Sama notes: 15/12
+UML diagram, some test cases / edge cases, maybe skeleton code?
