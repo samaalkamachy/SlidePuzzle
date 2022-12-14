@@ -10,7 +10,7 @@ import java.util.List;
  * Please note, currently only works for Windows and not OS.
  */
 public class Bmp {
-    private FileInputStream fileInputStream;
+    private final FileInputStream fileInputStream;
     private final static int BM = 0x4d42;		// Windows 3.1x, 95, NT, .. etc.
     private int position = 0;					// Cursor position in the file input stream.
 
@@ -34,15 +34,15 @@ public class Bmp {
     int coloursInColourTable;					// The numbers of colours in the colour pallet; 0 to default to 2n. 
     int importantColours;						// The number of important colours used; 0 when every colour is important. 
     
-    String scan_type;
-    int noEntries;
+    String scan_type = "BOTTOM_UP";             // Usually "Bottom-up", starting in the lower left corner, going from left to right
+
     int[][][] image;
  
     /**
      * Constructor for Bmp class
      *
      * @param fileInputStream --> .bmp slide puzzle
-     * @throws Exception
+     * @throws Exception -->
      */
     public Bmp(FileInputStream fileInputStream) throws Exception {
         this.fileInputStream = fileInputStream;
@@ -169,21 +169,81 @@ public class Bmp {
         // each entry (colours in colour table) in the color table occupies 4 bytes, in the order blue, green, red, 0x00
         int rowSize = ((bitsPerPixels * width) / 32) * 4;
         int pixelArraySize = rowSize * Math.abs(height);
-        
+
+        if (scan_type.equals("TOP_TO_BOTTOM")){
+            image = scanTopToBottom();
+        } else {
+            image = scanBottomUp();
+        }
+    }
+
+    /**
+     * Read the colour table starting from the top left pixel, traversing left to right then top to bottom.
+     *
+     * @return Image, in the format of top to bottom
+     */
+    private int[][][] scanTopToBottom() throws Exception {
         image = new int[width][height][3];
-        
+        int padding = width%4;
+        System.out.println(padding);
+
         for (int i=0; i<width - 1; i++) {
-        	for (int j=0; j<height; j++) {
-        		image[i][j][2] = fileInputStream.read();	// Red.
-        		image[i][j][1] = fileInputStream.read();	// Green.
-        		image[i][j][0] = fileInputStream.read();	// Blue.
-        		
-        		if (image[i][j][0] < 0 || image[i][j][0] > 255 || 
-        				image[i][j][1] < 0 || image[i][j][1] > 255 ||
-        					image[i][j][2] < 0 || image[i][j][2] > 255) {
-        			throw new Exception("theres something wrong with the image data");
-        		}
-        	}
+            for (int j=0; j<height; j++) {
+                image[i][j][2] = fileInputStream.read();	// Red.
+                image[i][j][1] = fileInputStream.read();	// Green.
+                image[i][j][0] = fileInputStream.read();	// Blue.
+                validatePixel(image[i][j]);
+            }
+
+            // Padding
+            if (padding != 0){
+                for (int x=0; x< padding; x++){
+                    fileInputStream.read();
+                }
+            }
+        }
+        return image;
+    }
+
+    /**
+     * Read the colour table starting from the bottom left pixel, traversing left to right then upwards.
+     *
+     * @return Image, in the format of top to bottom
+     */
+    private int[][][] scanBottomUp() throws Exception {
+        image = new int[width][height][3];
+        int padding = width%4;
+        System.out.println(padding);
+
+        for (int i= width - 1; i >= 0; i--){
+            for (int j = 0; j< height; j++){
+                image[i][j][2] = fileInputStream.read();	// Red.
+                image[i][j][1] = fileInputStream.read();	// Green.
+                image[i][j][0] = fileInputStream.read();	// Blue.
+                validatePixel(image[i][j]);
+            }
+
+            // Padding
+            if (padding != 0){
+                for (int x=0; x< padding; x++){
+                    fileInputStream.read();
+                }
+            }
+        }
+        return image;
+    }
+
+    /**
+     * Validates pixel data.
+     *
+     * @param pixel --> in the format RGB.
+     * @throws Exception --> if pixel colour is out of bounds (0-255)
+     */
+    private void validatePixel(int[] pixel) throws Exception {
+        if (pixel[0] < 0 || pixel[0] > 255 ||
+                pixel[1] < 0 || pixel[1] > 255 ||
+                pixel[2] < 0 || pixel[2] > 255) {
+            throw new Exception("theres something wrong with the image data");
         }
     }
     
@@ -213,7 +273,7 @@ public class Bmp {
      * Given an RGB colour, find a list of all pixel index's that contain the colour within the image. 
      * 
      * @param rgb --> Int array contaings rgb in the range 0-255. 
-     * @return index_list --> A list containing all of the index's. 
+     * @return index_list --> A list containing all the index's.
      */
     public List<Integer[]> findList(int[] rgb){
     	Integer[] index = new Integer[2];
