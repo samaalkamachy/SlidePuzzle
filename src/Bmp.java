@@ -185,10 +185,9 @@ public class Bmp {
     private int[][][] scanTopToBottom() throws Exception {
         image = new int[width][height][3];
         int padding = width%4;
-        System.out.println(padding);
 
         for (int i=0; i<width - 1; i++) {
-            for (int j=0; j<height; j++) {
+            for (int j=0; j< height; j++) {
                 image[i][j][2] = fileInputStream.read();	// Red.
                 image[i][j][1] = fileInputStream.read();	// Green.
                 image[i][j][0] = fileInputStream.read();	// Blue.
@@ -213,7 +212,6 @@ public class Bmp {
     private int[][][] scanBottomUp() throws Exception {
         image = new int[width][height][3];
         int padding = width%4;
-        System.out.println(padding);
 
         for (int i= width - 1; i >= 0; i--){
             for (int j = 0; j< height; j++){
@@ -272,12 +270,11 @@ public class Bmp {
     /**
      * Given an RGB colour, find a list of all pixel index's that contain the colour within the image. 
      * 
-     * @param rgb --> Int array contaings rgb in the range 0-255. 
+     * @param rgb --> Int array contaings rgb in the range 0-255.
      * @return index_list --> A list containing all the index's.
      */
-    public List<Integer[]> findList(int[] rgb){
-    	Integer[] index = new Integer[2];
-    	List<Integer[]> index_list = new ArrayList<Integer[]>();  
+    public List<int[]> findList(int[] rgb){
+    	List<int[]> index_list = new ArrayList<int[]>();
     	
 		for (int i =0; i< width; i++) {
 			for (int j=0; j< height; j++){
@@ -285,11 +282,7 @@ public class Bmp {
 				if (image[i][j][0] == rgb[0] && 
 						image[i][j][1] == rgb[1] &&
 							image[i][j][2] == rgb[2]) {
-					index[0] = i;
-					index[1] = j;
-					index_list.add(index);
-					System.out.print(index[0] + ", " + index[1]);
-					System.out.println();
+					index_list.add(new int[]{i, j});
 				}
 			}
 		}
