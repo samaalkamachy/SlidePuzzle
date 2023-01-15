@@ -12,12 +12,12 @@ public class Main {
         String filePath = args[0];
         FileInputStream fileInputStream = new FileInputStream(filePath);
 
-        // Create new instance of BMP object.
-        Bmp bmpImage = new Bmp(fileInputStream);
-        
-        // Pass the bmpImage to the Image processor.
-        new ImageProcesor(bmpImage);
-        
-        // Save and display the solution.
+        // Extract image as pixel array from the file input stream.
+        BitmapFileReader bitmapFileReader = new BitmapFileReader(fileInputStream);
+        int[][][] image = bitmapFileReader.image;
+
+        // todo process slide puzzle.
+        new ImageToSlidePuzzleProccessor(image);
+        new DividAndConquer();
     }
 }
